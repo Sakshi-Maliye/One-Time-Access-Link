@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secure-link-deployment
+  labels:
+    app: secure-link-api
+spec:
+  replicas: 1 # Strictly 1 because of our in-memory storage!
+  selector:
+    matchLabels:
+      app: secure-link-api
+  template:
+    metadata:
+      labels:
+        app: secure-link-api
+    spec:
+      containers:
+      - name: one-time-link-api
+        image: one-time-link-api:latest
+        imagePullPolicy: Never # Tells K8s to use your local Docker image, not look on the internet
+        ports:
+        - containerPort: 8080
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: secure-link-service
+spec:
+  type: NodePort # Exposes the API outside the K8s cluster so your browser can reach it
+  selector:
+    app: secure-link-api
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 30080 # This is the new port you will access in your browser

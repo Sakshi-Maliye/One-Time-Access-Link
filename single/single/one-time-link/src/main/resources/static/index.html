@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project-18 Secure Portal</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a2e; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background-color: #16213e; padding: 40px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 400px; text-align: center; border-top: 5px solid #e94560; }
+        input[type="text"], input[type="password"], input[type="file"] { width: 90%; padding: 12px; margin: 15px 0; border-radius: 5px; border: none; background: #0f3460; color: white; }
+        button { background-color: #e94560; color: white; border: none; padding: 12px 20px; width: 100%; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
+        button:hover { background-color: #ff3366; }
+        .hidden { display: none; }
+        #link-result { margin-top: 20px; background: #0f3460; padding: 15px; word-wrap: break-word; border-radius: 5px; border-left: 4px solid #4caf50;}
+        a { color: #4caf50; text-decoration: none; font-weight: bold;}
+    </style>
+</head>
+<body>
+
+    <div class="card" id="login-screen">
+        <h2>🔒 Project-18 Login</h2>
+        <p style="color: #aaa; font-size: 14px;">Authorized Personnel Only</p>
+        <input type="text" id="username" placeholder="Username (Hint: admin)" required>
+        <input type="password" id="password" placeholder="Password (Hint: admin)" required>
+        <button onclick="checkLogin()">Authenticate</button>
+        <p id="login-error" style="color: #ff3366; display: none;">Invalid credentials.</p>
+    </div>
+
+    <div class="card hidden" id="upload-screen">
+        <h2>⬆️ Secure Image Upload</h2>
+        <p style="color: #aaa; font-size: 14px;">File will be bound to an ephemeral token.</p>
+        <input type="file" id="image-file" accept="image/*" required>
+        <button onclick="uploadImage()">Generate One-Time Link</button>
+        
+        <div id="link-result" class="hidden">
+            <p>Share this highly secure link:</p>
+            <a id="generated-link" href="#" target="_blank"></a>
+        </div>
+    </div>
+
+    <script>
+        // Fake Presentation Login Logic
+        function checkLogin() {
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("password").value;
+            if(user === "admin" && pass === "admin") {
+                document.getElementById("login-screen").classList.add("hidden");
+                document.getElementById("upload-screen").classList.remove("hidden");
+            } else {
+                document.getElementById("login-error").style.display = "block";
+            }
+        }
+
+        // Upload Logic connected to your Spring Boot API
+        async function uploadImage() {
+            const fileInput = document.getElementById('image-file');
+            if (fileInput.files.length === 0) { alert("Please select an image first!"); return; }
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            const response = await fetch('/api/links/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                const token = await response.text();
+                const linkUrl = window.location.origin + "/api/links/" + token;
+                
+                document.getElementById("link-result").classList.remove("hidden");
+                const linkElement = document.getElementById("generated-link");
+                linkElement.href = linkUrl;
+                linkElement.innerText = linkUrl;
+            } else {
+                alert("Upload failed. Is the server running?");
+            }
+        }
+    </script>
+</body>
+</html>
